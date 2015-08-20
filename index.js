@@ -80,9 +80,10 @@ ONA.validate = function(input, cb) {
   //Check for _geolocation field
 
   //use Array.filter to return an array of objects WITHOUT the _geolocation property
+  //_geolocation can be null, but it needs to be there.
   var filtered = input.filter(function (item) {
 
-    if (item._geolocation) return false;
+    if (item.hasOwnProperty("_geolocation")) return false;
 
     return true;
   });
@@ -114,7 +115,9 @@ ONA.parse = function(input, cadasta_data, cb) {
 
     //For each geolocation property, replace it with valid geojson snippet
     input.forEach(function(item){
+      if(item._geolocation){
         item._geolocation = replaceYXWithGeoJSON(item._geolocation);
+      }
     });
 
     var cjf = {

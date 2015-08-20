@@ -39,6 +39,8 @@ describe('ONA Suite', function () {
       (response.data[0]).should.have.property('_geolocation');
       (response.data[0]._geolocation).should.have.property('type');
 
+      console.log(response.data[0]._geolocation);
+
       done();
 
     });
