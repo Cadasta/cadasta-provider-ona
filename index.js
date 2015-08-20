@@ -5,8 +5,7 @@
  * @constructor
  */
 
-var jsonfile = require('jsonfile'),
-    geojsonhint = require('geojsonhint');
+var jsonfile = require('jsonfile');
 
 var ONA =  {
 
