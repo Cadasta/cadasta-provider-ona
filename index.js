@@ -7,6 +7,7 @@
 
 var jsonfile = require('jsonfile');
 var http = require('http');
+var pg = require('../cadasta-data-transformer/src/controllers/data_access.js');
 
 var ONA =  {
 
@@ -148,7 +149,15 @@ ONA.getFormFromOna = function(cadastaProjectId, formId) {
 
 }
 
+
 ONA.registerTriggerForForm = function(formId) {
+
+    //Though we have the form ID, Ona requires the string based
+    //version of the form id.
+    pg.query("SELECT id_string FROM survey WHERE id = " + formId + ";", function (data) {
+        console.log('hi');
+    });
+
 
     //Request URL:http://54.245.82.92/cadasta/forms/CJF-minimum/addservice
     //Request Method:POST
