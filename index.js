@@ -6,6 +6,7 @@
  */
 
 var jsonfile = require('jsonfile');
+var http = require('http');
 
 var ONA =  {
 
@@ -137,6 +138,65 @@ ONA.parse = function(input, cadasta_data, cb) {
   }
 
 }
+
+
+
+
+
+
+ONA.getFormFromOna = function(cadastaProjectId, formId) {
+
+}
+
+ONA.registerTriggerForForm = function(formId) {
+
+    //Request URL:http://54.245.82.92/cadasta/forms/CJF-minimum/addservice
+    //Request Method:POST
+
+    // Form Data
+    // csrfmiddlewaretoken:lQP203erhd9HoO40DoGs9kNlFcnnP3SN
+    // service_name:generic_json
+    // service_url:http://myurl.com/myroute
+
+    // Response
+    // {"status": "success", "message": "Successfully added service generic_json.", "restservice": "\n<li>CJF-minimum:JSON POST - http://myurl.com/myroute\n\n    &nbsp;-&nbsp;<a href=\"#\" data-url=\"/cadasta/forms/CJF-minimum/delservice\" data-id=\"4\" class=\"btn btn-mini btn-danger restserviceitem\">Delete</a>\n</li>\n"}
+
+    // Build the post string from an object
+    var postData = querystring.stringify({
+        csrfmiddlewaretoken: "lQP203erhd9HoO40DoGs9kNlFcnnP3SN",
+        service_name: "generic_json",
+        service_url: "http://myurl.com/fromnode"
+    });
+
+    // An object of options to indicate where to post to
+    var postOptions = {
+        host: '54.245.82.92',
+        port: '80',
+        path: '/cadasta/forms/CJF-minimum/addservice',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': postData.length
+        }
+    };
+
+    // Set up the request
+    var postReq = http.request(postOptions, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log('Response: ' + chunk);
+        });
+    });
+}
+
+ONA.loadData = function(formId, formInstanceData) {
+
+}
+
+
+
+
+
 
 
 /***
