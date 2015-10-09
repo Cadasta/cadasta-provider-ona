@@ -8,6 +8,7 @@
 var jsonfile = require('jsonfile');
 var http = require('http');
 var pg = require('../cadasta-data-transformer/src/controllers/data_access.js');
+var settings = null;
 
 var ONA =  {
 
@@ -18,10 +19,9 @@ var ONA =  {
  * This is required in order for this to work properly
  * @param ingestion_engine - an instance of the cadasta-ingestion-engine
  */
-ONA.register = function(ingestion_engine){
-
+ONA.register = function(ingestion_engine, pSettings){
     ingestion_engine.providers["ona"] = ONA;
-
+    settings = pSettings;
 }
 
 
@@ -150,15 +150,30 @@ ONA.getFormFromOna = function(cadastaProjectId, formId) {
 }
 
 
-ONA.registerTriggerForForm = function(formId) {
+ONA.registerTriggerForForm = function(formId, cb) {
+
+    if (typeof settings.ona !== 'object' || typeof settings.ona.rootUrl === 'string') {
+        cb({status: "ERROR", msg: "You must enter your Ona settings and credentials in your settings.js file in cadasta-api/settings/environment-settings.js."});
+    }
 
     //Though we have the form ID, Ona requires the string based
     //version of the form id.
-    pg.query("SELECT id_string FROM field_data WHERE id = " + formId + ";", function (data) {
-        console.log('hi');
+    pg.query("SELECT id_string FROM field_data WHERE form_id = " + formId + ";", function (err, data) {
+        if (err) {
+            cb({status: "ERROR", msg: "No form found for formId."});
+            return;
+        }
+        if (typeof data === 'object' && data.length > 0 && typeof data[0] === 'object' && typeof data[0].id_string === 'string') {
+            var idString = data[0].id_string;
+            postTriggerToOna(idString);
+        } else {
+            cb({status: "ERROR", msg: "No form found for formId."});
+        }
     });
 
+}
 
+function postTriggerToOna(idString) {
     //Request URL:http://54.245.82.92/cadasta/forms/CJF-minimum/addservice
     //Request Method:POST
 
