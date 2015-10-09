@@ -154,7 +154,7 @@ ONA.registerTriggerForForm = function(formId) {
 
     //Though we have the form ID, Ona requires the string based
     //version of the form id.
-    pg.query("SELECT id_string FROM survey WHERE id = " + formId + ";", function (data) {
+    pg.query("SELECT id_string FROM field_data WHERE id = " + formId + ";", function (data) {
         console.log('hi');
     });
 
