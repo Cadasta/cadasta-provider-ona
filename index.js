@@ -166,7 +166,7 @@ ONA.registerTriggerForForm = function(formId, cb) {
     // Build the post string from an object
     var postData = JSON.stringify({
         "xform": formId,
-        "service_url": "http://url.com/something7872",
+        "service_url": "http://api.cadasta.org/providers/ona/trigger/" + formId,
         "name": "generic_json"
     });
 
@@ -186,7 +186,15 @@ ONA.registerTriggerForForm = function(formId, cb) {
     var postReq = http.request(postOptions, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            console.log('Response: ' + chunk);
+            var onaResponse = JSON.parse(chunk);
+            var status = "OK";
+            if (!onaResponse.id) {
+                status = "ERROR";
+            }
+            cb({
+                status: status,
+                ona: onaResponse
+            });
         });
     });
 
