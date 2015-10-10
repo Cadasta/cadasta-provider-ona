@@ -152,55 +152,33 @@ ONA.getFormFromOna = function(cadastaProjectId, formId) {
 
 ONA.registerTriggerForForm = function(formId, cb) {
 
-    if (typeof settings.ona !== 'object' || typeof settings.ona.rootUrl === 'string') {
+    if (typeof settings.ona !== 'object') {
         cb({status: "ERROR", msg: "You must enter your Ona settings and credentials in your settings.js file in cadasta-api/settings/environment-settings.js."});
     }
 
-    //Though we have the form ID, Ona requires the string based
-    //version of the form id.
-    pg.query("SELECT id_string FROM field_data WHERE form_id = " + formId + ";", function (err, data) {
-        if (err) {
-            cb({status: "ERROR", msg: "No form found for formId."});
-            return;
-        }
-        if (typeof data === 'object' && data.length > 0 && typeof data[0] === 'object' && typeof data[0].id_string === 'string') {
-            var idString = data[0].id_string;
-            postTriggerToOna(idString);
-        } else {
-            cb({status: "ERROR", msg: "No form found for formId."});
-        }
-    });
+    // Documentation on creating a trigger on Ona can be found here:
+    //    https://api.ona.io/static/docs/restservices.html
 
-}
-
-function postTriggerToOna(idString) {
-    //Request URL:http://54.245.82.92/cadasta/forms/CJF-minimum/addservice
-    //Request Method:POST
-
-    // Form Data
-    // csrfmiddlewaretoken:lQP203erhd9HoO40DoGs9kNlFcnnP3SN
-    // service_name:generic_json
-    // service_url:http://myurl.com/myroute
-
-    // Response
-    // {"status": "success", "message": "Successfully added service generic_json.", "restservice": "\n<li>CJF-minimum:JSON POST - http://myurl.com/myroute\n\n    &nbsp;-&nbsp;<a href=\"#\" data-url=\"/cadasta/forms/CJF-minimum/delservice\" data-id=\"4\" class=\"btn btn-mini btn-danger restserviceitem\">Delete</a>\n</li>\n"}
+    // Example of a post that works:
+    //    https://www.dropbox.com/s/iy3an89yuvigji8/Screenshot%202015-10-09%2014.09.54.png?dl=0
+    //    https://www.dropbox.com/s/q4od3h8vvexg5os/Screenshot%202015-10-09%2014.11.12.png?dl=0
 
     // Build the post string from an object
-    var postData = querystring.stringify({
-        csrfmiddlewaretoken: "lQP203erhd9HoO40DoGs9kNlFcnnP3SN",
-        service_name: "generic_json",
-        service_url: "http://myurl.com/fromnode"
+    var postData = JSON.stringify({
+        "xform": formId,
+        "service_url": "http://url.com/something7872",
+        "name": "generic_json"
     });
 
     // An object of options to indicate where to post to
     var postOptions = {
-        host: '54.245.82.92',
-        port: '80',
-        path: '/cadasta/forms/CJF-minimum/addservice',
+        host: settings.ona.host,
+        port: settings.ona.port,
+        path: '/api/v1/restservices',
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': postData.length
+            'Content-Type': 'application/json',
+            'Authorization': 'Token ' + settings.ona.apiToken
         }
     };
 
@@ -211,7 +189,12 @@ function postTriggerToOna(idString) {
             console.log('Response: ' + chunk);
         });
     });
+
+    postReq.write(postData);
+    postReq.end();
 }
+
+
 
 ONA.loadData = function(formId, formInstanceData) {
 
