@@ -1,0 +1,15 @@
+Thumbs.db
+
+.idea/
+
+.DS_Store
+
+app/settings/*
+!app/settings/settings.js.example
+!app/settings/environment-settings.js.example
+node_modules/
+app/public/docs/
+ship/**
+deploy/**
+
+s3-test.js

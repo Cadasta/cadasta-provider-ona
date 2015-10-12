@@ -204,7 +204,7 @@ ONA.registerTriggerForForm = function(formId, cb) {
 
 
 
-ONA.loadData = function(formId, formInstanceData) {
+ONA.trigger = function(formId) {
 
 }
 
