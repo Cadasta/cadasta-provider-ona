@@ -222,6 +222,59 @@ ONA.loadForm = function(projectId, form, cb) {
 
 ONA.uploadFormtoONA = function (file) {
 
+    // move everything to loadForm
+    var form = new multiparty.Form();
+
+    form.parse(req, function (err, fields, files) {
+
+        // save xls file
+        var file = files.xls_file;
+        //var file = req.file.buffer;
+
+
+        // python-shell options
+        var options = {
+            scriptPath: path.join(__dirname + ' ../../../pyxform/pyxform/'), // location of script dir
+            args: [file[0].path],
+            mode: "text"
+        };
+
+        var formObj;
+
+        PythonShell.run('xls2json.py', options, function (err, results) {
+            if (err) throw err;
+
+            var obj = "";
+
+            // concat results into JSON string
+            results.forEach(function (res) {
+                obj += res;
+            });
+
+            formObj = JSON.parse(obj);  // parse JSON string
+
+            // validate parsed JSON
+            app.validator(formObj)
+                .then(function (result) {
+                    // make request to ONA
+                    return provider.uploadFormtoONA(file)
+                })
+
+                .then(function (result){
+                    provider.loadForm(project_id,result, function(response) {
+                        if (response.status == "ERROR") {
+                            res.status(400).json(response);
+                        } else {
+                            res.status(200).json(response);
+                        }
+                    });
+                })
+                .catch(function (err) {
+                });
+        });
+
+    });
+
     var postData = JSON.stringify({
         'data': 'xls_file=@'+file[0].path
     });
