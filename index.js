@@ -163,10 +163,13 @@ ONA.registerTriggerForForm = function(formId, cb) {
     //    https://www.dropbox.com/s/iy3an89yuvigji8/Screenshot%202015-10-09%2014.09.54.png?dl=0
     //    https://www.dropbox.com/s/q4od3h8vvexg5os/Screenshot%202015-10-09%2014.11.12.png?dl=0
 
+    var triggerUrl = httpOrHttps(settings.port) + settings.host + ":" + settings.port + "/providers/ona/trigger/" + formId;
+    console.log("trigger url: " + triggerUrl);
+
     // Build the post string from an object
     var postData = JSON.stringify({
         "xform": formId,
-        "service_url": httpOrHttps(settings.port) + settings.host + ":" + settings.port + "/providers/ona/trigger/" + formId,
+        "service_url": triggerUrl,
         "name": "generic_json"
     });
 
