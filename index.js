@@ -211,6 +211,7 @@ ONA.trigger = function(formId) {
         host: settings.ona.host,
         path: '/api/v1/data/' + formId + '.json'
     };
+    console.log(JSON.stringify(options));
 
     http.request(options, function (response) {
         var str = '';
