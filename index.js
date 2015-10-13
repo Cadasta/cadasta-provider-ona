@@ -205,8 +205,63 @@ ONA.registerTriggerForForm = function(formId, cb) {
 }
 
 
-
+/**
+ * Please note, we are getting the complete data.json end point
+ * for a given form every time this trigger is hit. This is a
+ * temporary solution that will not scale.
+ *
+ * Unfortunately, Ona returns paginated data in an arbitrary order,
+ * and the dataviews end point is broken.
+ *
+ * https://github.com/Cadasta/cadasta-provider-ona/issues/1
+ *
+ * @param formId
+ */
 ONA.trigger = function(formId) {
+    fetchUUIDsForForm(formId, function (uuidHash) {
+        fetchDataFromOna(formId, function(onaData) {
+            var filteredCJF = filterFreshDataToCJF(uuidHash, onaData);
+        });
+    });
+}
+
+/**
+ * The creates a hash from the db of all of the uuids
+ * for a given form. We feed a JSON Object to the cb
+ * callback that can key to each uuid we have for
+ * quick search.
+ *
+ * @param formId
+ * @param cb
+ */
+function fetchUUIDsForForm(formId, cb) {
+    // Get all of the UUIDs for each instance of the form.
+    var sql = "select respondent.uuid from respondent join field_data on respondent.field_data_id = field_data.id where field_data.form_id = " + formId + ";";
+    pg.query(sql, function (err, data) {
+        if (err) {
+            console.error("Unable to fetch UUIDs for Form.");
+            return;
+        }
+        var uuidHash = {};
+        for (var i = 0; i < data.length; i++) {
+            var obj = data[i];
+            if (typeof obj.uuid !== 'string') {
+                console.error("Bad UUID when fetching UUIDs for form.");
+            }
+            uuidHash[obj.uuid] = true;
+        }
+        cb(uuidHash);
+    });
+}
+
+/**
+ * Fetches all of the data for a given form from Ona's
+ * /api/v1/data/{{id}}.json endpoint.
+ *
+ * @param formId
+ * @param cb - feeds callback the onaData object
+ */
+function fetchDataFromOna(formId, cb) {
     var options = {
         host: settings.ona.host,
         path: '/api/v1/data/' + formId + '.json',
@@ -214,8 +269,6 @@ ONA.trigger = function(formId) {
             'Authorization': 'Token ' + settings.ona.apiToken
         }
     };
-    console.log(JSON.stringify(options));
-
     http.request(options, function (response) {
         var str = '';
 
@@ -226,16 +279,44 @@ ONA.trigger = function(formId) {
 
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
-            console.log('trigger from ona: ' + str);
+            var onaData = JSON.parse(str);
+            cb(onaData);
         });
     }).end();
 }
 
+/**
+ * Iterates through the ona data.json array and filters out
+ * all of the objects with a uuid currently contained in the
+ * database.
+ *
+ * It also converts the _geolocation array into GeoJSON.
+ *
+ * with the name of `geo_location`.
+ *
+ * @param uuidHash
+ * @param onaData
+ */
+function filterFreshDataToCJF(uuidHash, onaData) {
+    var filteredCJF = [];
+    for (var i = 0; i < onaData.length; i++) {
+        var obj = onaData[i];
+        // if we dont currently have data with this uuid
+        if (!uuidHash[onaData._uuid]) {
+            obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
 
+            var cjf = {
+                version: 1.0,
+                cadasta_id: "12345", //this should be submitted or forwaded from CKAN API wrapper
+                operation: "create", //create, update, delete...need to sort this out
+                survey_id: null, //survey ID if it exists already.  If not exists, need to create survey first, and then load the data
+                data: obj
+            };
 
-
-
-
+            filteredCJF.push(obj);
+        }
+    }
+}
 
 /***
  * Takes in an array like this [Y,X], return a GEOJSON snippet in its place
