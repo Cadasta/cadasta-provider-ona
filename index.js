@@ -11,8 +11,8 @@ var pg = require('../cadasta-data-transformer/src/controllers/data_access.js');
 var settings = null;
 var PythonShell = require('python-shell');
 var path = require('path');
-
-
+var fs = require('fs');
+var request = require('request');
 
 var ONA =  {
 
@@ -237,72 +237,67 @@ ONA.xlstoJson = function (file,cb) {
 
         cb(formObj);
 
-        //
-        //.then(function (result){
-        //    provider.loadForm(project_id,result, function(response) {
-        //        if (response.status == "ERROR") {
-        //            res.status(400).json(response);
-        //        } else {
-        //            res.status(200).json(response);
-        //        }
-        //    });
-        //})
-        //.catch(function (err) {
-        //});
     });
 
 }
 
 
-ONA.loadFormtoDB = function(projectId, form, cb) {
+/**
+ * Creates CJF to Load into Cadasta DB
+ * @param formJSON
+ * @param projectId
+ * @param ONAresponse
+ * @param cb
+ */
+function createCJF (formJSON, projectId, ONAresponse, cb) {
 
     var cjf = {};
 
-    cjf.form = form;
-    cjf.form.formid = form.formid;
+    cjf.form = formJSON;
+    cjf.form.formid = ONAresponse.formid;
     cjf.project_id = projectId;
 
     cb(cjf);
 
 }
 
-ONA.uploadFormtoONA = function (file) {
-
-    var postData = JSON.stringify({
-        'xls_file': file[0].path
-    });
+/**
+ * Takes xls File and Loads to ONA api endpoint: http://54.245.82.92/api/v1/forms
+ * @param formJSON
+ * @param projectId
+ * @param file
+ * @param cb - returns CJF
+ */
+ONA.uploadFormtoONA = function (formJSON, projectId, file, cb) {
 
     // An object of options to indicate where to post to
     var postOptions = {
-        host: settings.ona.host,
-        port: settings.ona.port,
-        path: '/api/v1/forms',
-        method: 'POST',
+        'url':'http://54.245.82.92/api/v1/forms',
         headers: {
-            'Authorization': 'Token ' + settings.ona.apiToken,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Token ' + settings.ona.apiToken
         }
     };
 
-    // Set up the request
-    var postReq = http.request(postOptions, function(res) {
-        res.setEncoding('utf8');
+    var postReq = request.post(postOptions, function(err,res,body){
 
-        res.on('error', function(e){
-            console.log('problem with request: ' + e.message);
-        });
+        body = JSON.parse(body);
 
-        res.on('data', function (chunk) {
-            var onaResponse = JSON.parse(chunk);
-            var status = "OK";
-
-        });
+        if(body.type == 'alert-error' || body.detail){
+            cb({status:"ERROR", msg:body.text || body.detail})
+        } else if (body.formid !== null){
+            // create CJF and return to ingestion_base
+            createCJF(formJSON, projectId, body, function(cjf){
+                cb({status:"OK", ona:cjf})
+            });
+        }
     });
 
-    postReq.write(postData);
-    postReq.end();
+    var form = postReq.form();
+    // create alias for xls file
+    form.append('xls_file', fs.createReadStream(file[0].path), {filename: file[0].originalFilename});
 
-}
+};
 
 
 
