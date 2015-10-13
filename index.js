@@ -163,8 +163,7 @@ ONA.registerTriggerForForm = function(formId, cb) {
     //    https://www.dropbox.com/s/iy3an89yuvigji8/Screenshot%202015-10-09%2014.09.54.png?dl=0
     //    https://www.dropbox.com/s/q4od3h8vvexg5os/Screenshot%202015-10-09%2014.11.12.png?dl=0
 
-    var triggerUrl = httpOrHttps(settings.port) + settings.host + ":" + settings.port + "/providers/ona/trigger/" + formId;
-    console.log("trigger url: " + triggerUrl);
+    var triggerUrl = httpOrHttps(settings.port) + settings.hostIp + ":" + settings.apiPort + "/providers/ona/trigger/" + formId;
 
     // Build the post string from an object
     var postData = JSON.stringify({
