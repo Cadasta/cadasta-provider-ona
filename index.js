@@ -8,11 +8,10 @@
 var jsonfile = require('jsonfile');
 var http = require('http');
 var pg = require('../cadasta-data-transformer/src/controllers/data_access.js');
+var processdata = require('../cadasta-data-transformer/src/controllers/processdata.js');
 var settings = null;
 
-var ONA =  {
-
-}
+var ONA =  {};
 
 /***
  * Register is used to link up each provider with the base ingestion engine instance.
@@ -220,7 +219,8 @@ ONA.registerTriggerForForm = function(formId, cb) {
 ONA.trigger = function(formId) {
     fetchUUIDsForForm(formId, function (uuidHash) {
         fetchDataFromOna(formId, function(onaData) {
-            var filteredCJF = filterFreshDataToCJF(uuidHash, onaData);
+            var filteredData = filterFreshData(uuidHash, onaData);
+            processdata.load(filteredData);
         });
     });
 }
@@ -292,30 +292,20 @@ function fetchDataFromOna(formId, cb) {
  *
  * It also converts the _geolocation array into GeoJSON.
  *
- * with the name of `geo_location`.
- *
  * @param uuidHash
  * @param onaData
  */
-function filterFreshDataToCJF(uuidHash, onaData) {
-    var filteredCJF = [];
+function filterFreshData(uuidHash, onaData) {
+    var filteredData = [];
     for (var i = 0; i < onaData.length; i++) {
         var obj = onaData[i];
         // if we dont currently have data with this uuid
         if (!uuidHash[onaData._uuid]) {
             obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
-
-            var cjf = {
-                version: 1.0,
-                cadasta_id: "12345", //this should be submitted or forwaded from CKAN API wrapper
-                operation: "create", //create, update, delete...need to sort this out
-                survey_id: null, //survey ID if it exists already.  If not exists, need to create survey first, and then load the data
-                data: obj
-            };
-
-            filteredCJF.push(obj);
+            filteredData.push(obj);
         }
     }
+    return filteredData;
 }
 
 /***
@@ -336,4 +326,3 @@ function httpOrHttps(port) {
 }
 
 module.exports = ONA;
-
