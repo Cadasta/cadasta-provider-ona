@@ -209,7 +209,10 @@ ONA.registerTriggerForForm = function(formId, cb) {
 ONA.trigger = function(formId) {
     var options = {
         host: settings.ona.host,
-        path: '/api/v1/data/' + formId + '.json'
+        path: '/api/v1/data/' + formId + '.json',
+        headers: {
+            'Authorization': 'Token ' + settings.ona.apiToken
+        }
     };
     console.log(JSON.stringify(options));
 
