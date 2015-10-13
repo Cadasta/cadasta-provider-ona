@@ -166,7 +166,7 @@ ONA.registerTriggerForForm = function(formId, cb) {
     // Build the post string from an object
     var postData = JSON.stringify({
         "xform": formId,
-        "service_url": "http://api.cadasta.org/providers/ona/trigger/" + formId,
+        "service_url": httpOrHttps(settings.port) + settings.host + ":" + settings.port + "/providers/ona/trigger/" + formId,
         "name": "generic_json"
     });
 
@@ -205,7 +205,24 @@ ONA.registerTriggerForForm = function(formId, cb) {
 
 
 ONA.trigger = function(formId) {
+    var options = {
+        host: settings.ona.host,
+        path: '/api/v1/data/' + formId + '.json'
+    };
 
+    http.request(options, function (response) {
+        var str = '';
+
+        //another chunk of data has been recieved, so append it to `str`
+        response.on('data', function (chunk) {
+            str += chunk;
+        });
+
+        //the whole response has been recieved, so we just print it out here
+        response.on('end', function () {
+            console.log(str);
+        });
+    }).end();
 }
 
 
@@ -224,6 +241,12 @@ function replaceYXWithGeoJSON(input){
     return {"type":"Point","coordinates":[input[1],input[0]]};
 }
 
+function httpOrHttps(port) {
+    if (port === 443) {
+        return 'https://';
+    }
+    return 'http://';
+}
 
 module.exports = ONA;
 
