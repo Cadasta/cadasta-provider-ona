@@ -216,11 +216,15 @@ ONA.registerTriggerForForm = function(formId, cb) {
  *
  * @param formId
  */
-ONA.trigger = function(formId) {
+ONA.trigger = function(formId, cb) {
     fetchUUIDsForForm(formId, function (uuidHash) {
         fetchDataFromOna(formId, function(onaData) {
             var filteredData = filterFreshData(uuidHash, onaData);
             processdata.load(filteredData);
+            cb({
+                status: "OK",
+                msg: "Loaded fresh data into the database from Ona's /api/v1/data/" + formId + ".json."
+            })
         });
     });
 }
