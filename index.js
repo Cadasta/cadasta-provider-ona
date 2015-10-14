@@ -283,9 +283,13 @@ ONA.uploadFormtoONA = function (formJSON, projectId, file, cb) {
 
         body = JSON.parse(body);
 
+        // handle ONA errors
         if(body.type == 'alert-error' || body.detail){
+
             cb({status:"ERROR", msg:body.text || body.detail})
-        } else if (body.formid !== null){
+
+        } else if (body.formid !== null){ // successful response
+
             // create CJF and return to ingestion_base
             createCJF(formJSON, projectId, body, function(cjf){
                 cb({status:"OK", ona:cjf})
