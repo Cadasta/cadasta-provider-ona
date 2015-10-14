@@ -8,15 +8,14 @@
 var jsonfile = require('jsonfile');
 var http = require('http');
 var pg = require('../cadasta-data-transformer/src/controllers/data_access.js');
+var processdata = require('../cadasta-data-transformer/src/controllers/processdata.js');
 var settings = null;
 var PythonShell = require('python-shell');
 var path = require('path');
 var fs = require('fs');
 var request = require('request');
 
-var ONA =  {
-
-}
+var ONA =  {};
 
 /***
  * Register is used to link up each provider with the base ingestion engine instance.
@@ -146,14 +145,6 @@ ONA.parse = function(input, cadasta_data, cb) {
 
 
 
-
-
-
-ONA.getFormFromOna = function(cadastaProjectId, formId) {
-
-}
-
-
 ONA.registerTriggerForForm = function(formId, cb) {
 
     if (typeof settings.ona !== 'object') {
@@ -167,10 +158,12 @@ ONA.registerTriggerForForm = function(formId, cb) {
     //    https://www.dropbox.com/s/iy3an89yuvigji8/Screenshot%202015-10-09%2014.09.54.png?dl=0
     //    https://www.dropbox.com/s/q4od3h8vvexg5os/Screenshot%202015-10-09%2014.11.12.png?dl=0
 
+    var triggerUrl = httpOrHttps(settings.port) + settings.hostIp + ":" + settings.apiPort + "/providers/ona/trigger/" + formId;
+
     // Build the post string from an object
     var postData = JSON.stringify({
         "xform": formId,
-        "service_url": "http://api.cadasta.org/providers/ona/trigger/" + formId,
+        "service_url": triggerUrl,
         "name": "generic_json"
     });
 
@@ -207,9 +200,112 @@ ONA.registerTriggerForForm = function(formId, cb) {
 }
 
 
+/**
+ * Please note, we are getting the complete data.json end point
+ * for a given form every time this trigger is hit. This is a
+ * temporary solution that will not scale.
+ *
+ * Unfortunately, Ona returns paginated data in an arbitrary order,
+ * and the dataviews end point is broken.
+ *
+ * https://github.com/Cadasta/cadasta-provider-ona/issues/1
+ *
+ * @param formId
+ */
+ONA.trigger = function(formId, cb) {
+    fetchUUIDsForForm(formId, function (uuidHash) {
+        fetchDataFromOna(formId, function(onaData) {
+            var filteredData = filterFreshData(uuidHash, onaData);
+            processdata.load(filteredData);
+            cb({
+                status: "OK",
+                msg: "Loaded fresh data into the database from Ona's /api/v1/data/" + formId + ".json."
+            });
+        });
+    });
+}
 
-ONA.loadData = function(formId, formInstanceData) {
+/**
+ * The creates a hash from the db of all of the uuids
+ * for a given form. We feed a JSON Object to the cb
+ * callback that can key to each uuid we have for
+ * quick search.
+ *
+ * @param formId
+ * @param cb
+ */
+function fetchUUIDsForForm(formId, cb) {
+    // Get all of the UUIDs for each instance of the form.
+    var sql = "select respondent.uuid from respondent join field_data on respondent.field_data_id = field_data.id where field_data.form_id = " + formId + ";";
+    pg.query(sql, function (err, data) {
+        if (err) {
+            console.error("Unable to fetch UUIDs for Form.");
+            return;
+        }
+        var uuidHash = {};
+        for (var i = 0; i < data.length; i++) {
+            var obj = data[i];
+            if (typeof obj.uuid !== 'string') {
+                console.error("Bad UUID when fetching UUIDs for form.");
+            }
+            uuidHash[obj.uuid] = true;
+        }
+        cb(uuidHash);
+    });
+}
 
+/**
+ * Fetches all of the data for a given form from Ona's
+ * /api/v1/data/{{id}}.json endpoint.
+ *
+ * @param formId
+ * @param cb - feeds callback the onaData object
+ */
+function fetchDataFromOna(formId, cb) {
+    var options = {
+        host: settings.ona.host,
+        path: '/api/v1/data/' + formId + '.json',
+        headers: {
+            'Authorization': 'Token ' + settings.ona.apiToken
+        }
+    };
+    http.request(options, function (response) {
+        var str = '';
+
+        //another chunk of data has been recieved, so append it to `str`
+        response.on('data', function (chunk) {
+            str += chunk;
+        });
+
+        //the whole response has been recieved, so we just print it out here
+        response.on('end', function () {
+            var onaData = JSON.parse(str);
+            cb(onaData);
+        });
+    }).end();
+}
+
+/**
+ * Iterates through the ona data.json array and filters out
+ * all of the objects with a uuid currently contained in the
+ * database.
+ *
+ * It also converts the _geolocation array into GeoJSON.
+ *
+ * @param uuidHash
+ * @param onaData
+ */
+function filterFreshData(uuidHash, onaData) {
+    var filteredData = [];
+    for (var i = 0; i < onaData.length; i++) {
+        var obj = onaData[i];
+        // if we dont currently have data with this uuid
+        if (!uuidHash[onaData._uuid]) {
+            obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
+            filteredData.push(obj);
+        }
+    }
+    return filteredData;
 }
 
 ONA.xlstoJson = function (file,cb) {
@@ -304,9 +400,6 @@ ONA.uploadFormToONA = function (formJSON, projectId, file, cb) {
 };
 
 
-
-
-
 /***
  * Takes in an array like this [Y,X], return a GEOJSON snippet in its place
  * Output should be of the form:
@@ -317,6 +410,11 @@ function replaceYXWithGeoJSON(input){
     return {"type":"Point","coordinates":[input[1],input[0]]};
 }
 
+function httpOrHttps(port) {
+    if (port === 443) {
+        return 'https://';
+    }
+    return 'http://';
+}
 
 module.exports = ONA;
-
