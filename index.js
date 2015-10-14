@@ -364,11 +364,11 @@ function createCJF (formJSON, projectId, ONAresponse, cb) {
  * @param file
  * @param cb - returns CJF
  */
-ONA.uploadFormToONA = function (formJSON, projectId, file, cb) {
+ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
 
     // An object of options to indicate where to post to
     var postOptions = {
-        'url':'http://54.245.82.92/api/v1/forms',
+        url: httpOrHttps(settings.ona.port) + settings.ona.host + '/api/v1/forms',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Token ' + settings.ona.apiToken
