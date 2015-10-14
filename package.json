@@ -9,6 +9,7 @@
     "jsonfile": "^2.2.1",
     "python-shell": "^0.2.0",
     "q": "^1.4.1",
+    "request": "^2.65.0",
     "throw.js": "^1.0.0"
   },
   "devDependencies": {
