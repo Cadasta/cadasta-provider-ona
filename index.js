@@ -224,7 +224,7 @@ ONA.trigger = function(formId, cb) {
             cb({
                 status: "OK",
                 msg: "Loaded fresh data into the database from Ona's /api/v1/data/" + formId + ".json."
-            })
+            });
         });
     });
 }
