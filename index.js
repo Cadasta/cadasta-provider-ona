@@ -268,7 +268,7 @@ function createCJF (formJSON, projectId, ONAresponse, cb) {
  * @param file
  * @param cb - returns CJF
  */
-ONA.uploadFormtoONA = function (formJSON, projectId, file, cb) {
+ONA.uploadFormToONA = function (formJSON, projectId, file, cb) {
 
     // An object of options to indicate where to post to
     var postOptions = {
