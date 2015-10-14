@@ -308,7 +308,7 @@ function filterFreshData(uuidHash, onaData) {
     return filteredData;
 }
 
-ONA.xlstoJson = function (file,cb) {
+ONA.xlsToJson = function (file,cb) {
 
     // python-shell options
     var options = {
