@@ -320,7 +320,12 @@ ONA.xlsToJson = function (file,cb) {
     var formObj;
 
     PythonShell.run('xls2json.py', options, function (err, results) {
-        if (err) throw err;
+        if (err) {
+            cb({
+                status: 'ERROR',
+                msg: err
+            });
+        }
 
         var obj = "";
 
@@ -331,7 +336,10 @@ ONA.xlsToJson = function (file,cb) {
 
         formObj = JSON.parse(obj);  // parse JSON string
 
-        cb(formObj);
+        cb({
+            status: 'OK',
+            form: formObj
+        });
 
     });
 
