@@ -317,7 +317,7 @@ function filterFreshData(uuidHash, onaData) {
     for (var i = 0; i < onaData.length; i++) {
         var obj = onaData[i];
         // if we dont currently have data with this uuid
-        if (!uuidHash[onaData._uuid]) {
+        if (!uuidHash[obj._uuid]) {
             obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
             filteredData.push(obj);
         }
