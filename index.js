@@ -145,7 +145,7 @@ ONA.parse = function(input, cadasta_data, cb) {
 
 
 
-ONA.registerTriggerForForm = function(formId, cb) {
+ONA.registerTrigger = function(formId, onaApiKey, cb) {
 
     if (typeof settings.ona !== 'object') {
         cb({status: "ERROR", msg: "You must enter your Ona settings and credentials in your settings.js file in cadasta-api/settings/environment-settings.js."});
@@ -175,7 +175,7 @@ ONA.registerTriggerForForm = function(formId, cb) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Token ' + settings.ona.apiToken
+            'Authorization': 'Token ' + onaApiKey
         }
     };
 
@@ -416,7 +416,11 @@ ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
 
                         // create CJF and return to ingestion_base
                         createCJF(formJSON, projectId, body, function(cjf){
-                            cb({status:"OK", ona:cjf})
+                            cb({
+                                status:"OK",
+                                ona:cjf,
+                                ona_api_key: apiKey
+                            });
                         });
                     }
                 });
