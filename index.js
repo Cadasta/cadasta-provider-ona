@@ -262,27 +262,44 @@ function fetchUUIDsForForm(formId, cb) {
  * @param cb - feeds callback the onaData object
  */
 function fetchDataFromOna(formId, cb) {
-    var options = {
-        host: settings.ona.host,
-        path: '/api/v1/data/' + formId + '.json',
-        headers: {
-            'Authorization': 'Token ' + settings.ona.apiToken
+    pg.query("SELECT ona_api_key FROM project JOIN field_data ON project.id = field_data.project_id WHERE field_data.form_id = " + formId + ";", function (err, res) {
+        if (err) {
+            cb({
+                status: "ERROR",
+                msg: err
+            });
         }
-    };
-    http.request(options, function (response) {
-        var str = '';
 
-        //another chunk of data has been recieved, so append it to `str`
-        response.on('data', function (chunk) {
-            str += chunk;
-        });
+        if (res.length > 0) {
+            var apiKey = res[0].ona_api_key;
+            var options = {
+                host: settings.ona.host,
+                path: '/api/v1/data/' + formId + '.json',
+                headers: {
+                    'Authorization': 'Token ' + settings.ona.apiToken
+                }
+            };
+            http.request(options, function (response) {
+                var str = '';
 
-        //the whole response has been recieved, so we just print it out here
-        response.on('end', function () {
-            var onaData = JSON.parse(str);
-            cb(onaData);
-        });
-    }).end();
+                //another chunk of data has been recieved, so append it to `str`
+                response.on('data', function (chunk) {
+                    str += chunk;
+                });
+
+                //the whole response has been recieved, so we just print it out here
+                response.on('end', function () {
+                    var onaData = JSON.parse(str);
+                    cb(onaData);
+                });
+            }).end();
+        } else {
+            cb({
+                status: "ERROR",
+                msg: "Unable to fetch ona_api_key from database."
+            });
+        }
+    });
 }
 
 /**
