@@ -276,7 +276,7 @@ function fetchDataFromOna(formId, cb) {
                 host: settings.ona.host,
                 path: '/api/v1/data/' + formId + '.json',
                 headers: {
-                    'Authorization': 'Token ' + settings.ona.apiToken
+                    'Authorization': 'Token ' + apiKey
                 }
             };
             http.request(options, function (response) {
