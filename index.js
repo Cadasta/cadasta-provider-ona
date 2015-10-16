@@ -374,36 +374,67 @@ function createCJF (formJSON, projectId, ONAresponse, cb) {
  */
 ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
 
-    // An object of options to indicate where to post to
-    var postOptions = {
-        url: httpOrHttps(settings.ona.port) + settings.ona.host + '/api/v1/forms',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Token ' + settings.ona.apiToken
-        }
-    };
-
-    var postReq = request.post(postOptions, function(err,res,body){
-
-        body = JSON.parse(body);
-
-        // handle ONA errors
-        if(body.type == 'alert-error' || body.detail){
-
-            cb({status:"ERROR", msg:body.text || body.detail})
-
-        } else if (body.formid !== null){ // successful response
-
-            // create CJF and return to ingestion_base
-            createCJF(formJSON, projectId, body, function(cjf){
-                cb({status:"OK", ona:cjf})
+    // We need the Ona API Token Key to upload a form to the given user associated to the project.
+    pg.query("SELECT ona_api_key FROM project WHERE id = " + projectId + ";", function (err, res) {
+        if (err) {
+            cb({
+                status: "ERROR",
+                msg: err
             });
         }
-    });
 
-    var form = postReq.form();
-    // create alias for xls file
-    form.append('xls_file', fs.createReadStream(file[0].path), {filename: file[0].originalFilename});
+        if (res.length > 0) {
+            var apiKey = res[0].ona_api_key;
+            if (typeof apiKey === 'undefined' || apiKey === null) {
+                cb({
+                    status: "NO_ONA_API_KEY",
+                    msg: "You must associate the API key of an Ona user with a Cadasta project."
+                });
+            } else {
+
+
+                // OK, we are good to go to post up to Ona!
+                // An object of options to indicate where to post to
+                var postOptions = {
+                    url: httpOrHttps(settings.ona.port) + settings.ona.host + '/api/v1/forms',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Token ' + apiKey
+                    }
+                };
+
+                var postReq = request.post(postOptions, function(err,res,body){
+
+                    body = JSON.parse(body);
+
+                    // handle ONA errors
+                    if(body.type == 'alert-error' || body.detail){
+
+                        cb({status:"ERROR", msg:body.text || body.detail})
+
+                    } else if (body.formid !== null){ // successful response
+
+                        // create CJF and return to ingestion_base
+                        createCJF(formJSON, projectId, body, function(cjf){
+                            cb({status:"OK", ona:cjf})
+                        });
+                    }
+                });
+
+                var form = postReq.form();
+                // create alias for xls file
+                form.append('xls_file', fs.createReadStream(file[0].path), {filename: file[0].originalFilename});
+
+
+            }
+        } else {
+            cb({
+                status: "ERROR",
+                msg: "Unable to fetch ona_api_key from database."
+            });
+        }
+
+    });
 
 };
 
