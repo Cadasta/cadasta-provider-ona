@@ -158,7 +158,7 @@ ONA.registerTrigger = function(formId, onaApiKey, cb) {
     //    https://www.dropbox.com/s/iy3an89yuvigji8/Screenshot%202015-10-09%2014.09.54.png?dl=0
     //    https://www.dropbox.com/s/q4od3h8vvexg5os/Screenshot%202015-10-09%2014.11.12.png?dl=0
 
-    var triggerUrl = httpOrHttps(settings.port) + settings.hostIp + ":" + settings.apiPort + "/providers/ona/trigger/" + formId;
+    var triggerUrl = httpOrHttps(settings.apiPort) + settings.hostIp + ":" + settings.apiPort + "/providers/ona/trigger/" + formId;
 
     // Build the post string from an object
     var postData = JSON.stringify({
@@ -393,7 +393,7 @@ function createCJF (formJSON, projectId, ONAresponse, cb) {
 ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
 
     // We need the Ona API Token Key to upload a form to the given user associated to the project.
-    pg.query("SELECT ona_api_key FROM project WHERE id = " + projectId + ";", function (err, res) {
+    pg.query("SELECT ona_api_key FROM project WHERE id = " + projectId + ";", function (err, resKey) {
         if (err) {
             cb({
                 status: "ERROR",
@@ -401,60 +401,76 @@ ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
             });
         }
 
-        if (res.length > 0) {
-            var apiKey = res[0].ona_api_key;
-            if (typeof apiKey === 'undefined' || apiKey === null) {
+        // Ensure idstring is unique in Cadasta DB
+        pg.query("SELECT id_string FROM field_data WHERE id_string = '" + formJSON.id_string + "';", function (err, res){
+            if (err) {
                 cb({
-                    status: "NO_ONA_API_KEY",
-                    msg: "You must associate the API key of an Ona user with a Cadasta project."
+                    status: "ERROR",
+                    msg: err
+                });
+            } else if (res.length > 0 && res[0].id_string !== null) {
+                cb({
+                    status: "ERROR",
+                    msg: "id_string is not unique"
                 });
             } else {
 
-
-                // OK, we are good to go to post up to Ona!
-                // An object of options to indicate where to post to
-                var postOptions = {
-                    url: httpOrHttps(settings.ona.port) + settings.ona.host + '/api/v1/forms',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + apiKey
-                    }
-                };
-
-                var postReq = request.post(postOptions, function(err,res,body){
-
-                    body = JSON.parse(body);
-
-                    // handle ONA errors
-                    if(body.type == 'alert-error' || body.detail){
-
-                        cb({status:"ERROR", msg:body.text || body.detail})
-
-                    } else if (body.formid !== null){ // successful response
-
-                        // create CJF and return to ingestion_base
-                        createCJF(formJSON, projectId, body, function(cjf){
-                            cb({
-                                status:"OK",
-                                ona:cjf,
-                                ona_api_key: apiKey
-                            });
+                if (resKey.length > 0) {
+                    var apiKey = resKey[0].ona_api_key;
+                    if (typeof apiKey === 'undefined' || apiKey === null) {
+                        cb({
+                            status: "NO_ONA_API_KEY",
+                            msg: "You must associate the API key of an Ona user with a Cadasta project."
                         });
+                    } else {
+
+
+                        // OK, we are good to go to post up to Ona!
+                        // An object of options to indicate where to post to
+                        var postOptions = {
+                            url: httpOrHttps(settings.ona.port) + settings.ona.host + '/api/v1/forms',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Token ' + apiKey
+                            }
+                        };
+
+                        var postReq = request.post(postOptions, function(err,res,body){
+
+                            body = JSON.parse(body);
+
+                            // handle ONA errors
+                            if(body.type == 'alert-error' || body.detail){
+
+                                cb({status:"ERROR", msg:body.text || body.detail})
+
+                            } else if (body.formid !== null){ // successful response
+
+                                // create CJF and return to ingestion_base
+                                createCJF(formJSON, projectId, body, function(cjf){
+                                    cb({
+                                        status:"OK",
+                                        ona:cjf,
+                                        ona_api_key: apiKey
+                                    });
+                                });
+                            }
+                        });
+
+                        var form = postReq.form();
+                        // create alias for xls file
+                        form.append('xls_file', fs.createReadStream(file[0].path), {filename: file[0].originalFilename});
+
+
                     }
-                });
-
-                var form = postReq.form();
-                // create alias for xls file
-                form.append('xls_file', fs.createReadStream(file[0].path), {filename: file[0].originalFilename});
-
-
+                } else {
+                    cb({
+                        status: "ERROR",
+                        msg: "Unable to fetch ona_api_key from database."
+                    });
+                }
             }
-        } else {
-            cb({
-                status: "ERROR",
-                msg: "Unable to fetch ona_api_key from database."
-            });
-        }
+        })
 
     });
 
