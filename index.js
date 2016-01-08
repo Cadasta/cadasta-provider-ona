@@ -483,7 +483,7 @@ ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
  * @param input
  */
 function replaceYXWithGeoJSON(input){
-    return {"type":"Point","coordinates":[input[1],input[0]]};
+    return (!input[1] && !input[0]) ? null : {"type":"Point","coordinates":[input[1],input[0]]};
 }
 
 function httpOrHttps(port) {
