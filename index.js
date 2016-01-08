@@ -274,9 +274,10 @@ function fetchDataFromOna(formId, cb) {
             var apiKey = res[0].ona_api_key;
             var options = {
                 host: settings.ona.host,
-                path: '/api/v1/data/' + formId + '.json',
+                path: '/api/v1/data/' + formId + '?start=0&limit=100000',
                 headers: {
-                    'Authorization': 'Token ' + apiKey
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Token ' + apiKey
                 }
             };
             http.request(options, function (response) {
