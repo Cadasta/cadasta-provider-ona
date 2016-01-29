@@ -65,6 +65,45 @@ describe('ONA Suite', function () {
 
   })
 
+  /**
+   * Test Polygon ingestion
+   */
+  it('should load an ONA file with geo_location polygon data', function(done){
+      var url = path.join(__dirname + '/data/shapesurvey-polygon-geo-data.json');
+      ona_provider.load(url, function(err, response){
+          (response).should.have.property('cadasta_id');
+          (response).should.have.property('operation');
+          (response).should.have.property('version');
+          (response).should.have.property('data');
+          assert.typeOf(response.data, 'array', 'data should be an array of objects.');
+          (response.data[0]._geolocation).should.have.property('type');
+          assert.equal(response.data[0]._geolocation.type, 'Polygon', 'type should be Polygon');
+          assert.typeOf(response.data[0]._geolocation.coordinates, 'array', 'data should be an array of objects.');
+          console.log(JSON.stringify(response.data[0]._geolocation))
+          done();
+      })
+  })
+
+  /**
+   * Test LineString ingestion
+   */
+  it('should load an ONA file with geo_location linestring data', function(done){
+      var url = path.join(__dirname + '/data/shapesurvey-geotrace-geo-data.json');
+      ona_provider.load(url, function(err, response){
+          (response).should.have.property('cadasta_id');
+          (response).should.have.property('operation');
+          (response).should.have.property('version');
+          (response).should.have.property('data');
+          assert.typeOf(response.data, 'array', 'data should be an array of objects.');
+          (response.data[0]._geolocation).should.have.property('type');
+          assert.equal(response.data[0]._geolocation.type, 'LineString', 'type should be Polygon');
+          assert.typeOf(response.data[0]._geolocation.coordinates, 'array', 'data should be an array of objects.');
+          console.log(JSON.stringify(response.data[0]._geolocation))
+          done();
+      })
+  })
+
+
 })
 
 
