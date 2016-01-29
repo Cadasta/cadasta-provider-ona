@@ -1,0 +1,188 @@
+{
+    "default_language": "default",
+    "id_string": "ShapeSurvey",
+    "children": [{
+        "name": "start",
+        "type": "start"
+    }, {
+        "name": "end",
+        "type": "end"
+    }, {
+        "name": "today",
+        "type": "today"
+    }, {
+        "name": "deviceid",
+        "type": "deviceid"
+    }, {
+        "name": "title",
+        "label": "Cadasta Platform - UAT Survey",
+        "type": "note"
+    }, {
+        "children": [{
+            "name": "theaaldridge",
+            "label": "Thea Aldridge"
+        }, {
+            "name": "katechapman",
+            "label": "Kate Chapman"
+        }, {
+            "name": "alexisfranklin",
+            "label": "Alexis Franklin"
+        }, {
+            "name": "chandralash",
+            "label": "Chandra Lash"
+        }, {
+            "name": "frankpichel",
+            "label": "Frank Pichel"
+        }, {
+            "name": "oliverroick",
+            "label": "Oliver Roick"
+        }, {
+            "name": "ianroll",
+            "label": "Ian Ross"
+        }, {
+            "name": "noeltaylor",
+            "label": "Noel Taylor"
+        }, {
+            "name": "boriszamyatin",
+            "label": "Boris Zamyatin"
+        }],
+        "name": "surveyor",
+        "label": "Surveyor Name",
+        "type": "select one"
+    }, {
+        "children": [{
+            "name": "group",
+            "label": "Group"
+        }, {
+            "name": "individual",
+            "label": "Individual"
+        }],
+        "name": "party_type",
+        "label": "Party Classification",
+        "type": "select one"
+    }, {
+        "name": "applicant_name_full",
+        "bind": {
+            "relevant": "${party_type}='individual'"
+        },
+        "label": "Applicant Full Name",
+        "type": "text"
+    }, {
+        "name": "applicant_name_group",
+        "bind": {
+            "relevant": "${party_type}='group'"
+        },
+        "label": "Applicant Group Name",
+        "type": "text"
+    }, {
+        "name": "geo_location",
+        "label": "Location of Parcel",
+        "type": "geoshape"
+    }, {
+        "name": "date_land_possession",
+        "label": "Date and Time of Land Possession",
+        "type": "dateTime"
+    }, {
+        "name": "means_of_acquire",
+        "label": "How did you acquire the land?",
+        "type": "text"
+    }, {
+        "children": [{
+            "name": "indigenous_land_rights",
+            "label": "Indigenous land rights"
+        }, {
+            "name": "joint_tenancy",
+            "label": "Joint tenancy"
+        }, {
+            "name": "tenancy_in_common",
+            "label": "Tenancy in common"
+        }, {
+            "name": "undivided_co_ownership",
+            "label": "Undivided co-ownership (general term covering strata title and condominiums)"
+        }, {
+            "name": "easment",
+            "label": "Easement"
+        }, {
+            "name": "equitable_servitude",
+            "label": "Equitable servitude"
+        }, {
+            "name": "mineral_rights",
+            "label": "Mineral rights (includes oil & gas)"
+        }, {
+            "name": "water_rights",
+            "label": "Water rights (collective term for bundle of rights possible)"
+        }, {
+            "name": "concessionary_rights",
+            "label": "Concessionary rights (non-mineral)"
+        }, {
+            "name": "carbon_rights",
+            "label": "Carbon rights"
+        }, {
+            "name": "freehold",
+            "label": "Freehold"
+        }, {
+            "name": "long_term_leasehold",
+            "label": "Long term leasehold (10+ years)"
+        }, {
+            "name": "leasehold",
+            "label": "Leasehold"
+        }, {
+            "name": "customary_rights",
+            "label": "Customary Rights"
+        }, {
+            "name": "occupancy",
+            "label": "Occupancy (no documented rights)"
+        }, {
+            "name": "tenancy",
+            "label": "Tenancy (documented sub-lease)"
+        }, {
+            "name": "hunting_fishing_harvest_rights",
+            "label": "Hunting/Fishing/Harvest Rights"
+        }, {
+            "name": "grazing_rights",
+            "label": "Grazing Rights"
+        }],
+        "name": "tenure_type",
+        "label": "What is the social tenure type?",
+        "type": "select one"
+    }, {
+        "children": [{
+            "name": "sacred_area",
+            "label": "Sacred Area"
+        }, {
+            "name": "common_grazing",
+            "label": "Common Grazing Area"
+        }, {
+            "name": "sacred_site",
+            "label": "Sacred Site"
+        }, {
+            "name": "community_meeting_hall",
+            "label": "Community Meeting Hall"
+        }, {
+            "name": "graveyard",
+            "label": "Graveyard"
+        }],
+        "name": "land_type",
+        "label": "What is the land feature?",
+        "type": "select one"
+    }, {
+        "control": {
+            "bodyless": true
+        },
+        "children": [{
+            "name": "instanceID",
+            "bind": {
+                "readonly": "true()",
+                "calculate": "concat('uuid:', uuid())"
+            },
+            "type": "calculate"
+        }],
+        "name": "meta",
+        "type": "group"
+    }],
+    "version": "201601131904",
+    "type": "survey",
+    "name": "bolinas_exercise",
+    "sms_keyword": "ShapeSurvey",
+    "title": "ShapeSurvey"
+}

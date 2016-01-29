@@ -121,7 +121,8 @@ ONA.parse = function(input, cadasta_data, cb) {
         //For each geolocation property, replace it with valid geojson snippet
         input.forEach(function(item){
             if(item._geolocation){
-                item._geolocation = replaceYXWithGeoJSON(item._geolocation);
+                //item._geolocation = replaceYXWithGeoJSON(item._geolocation);
+                item._geolocation = processGeolocation(item);
             }
         });
 
@@ -319,7 +320,8 @@ function filterFreshData(uuidHash, onaData) {
         var obj = onaData[i];
         // if we dont currently have data with this uuid
         if (!uuidHash[obj._uuid]) {
-            obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
+            //obj._geolocation = replaceYXWithGeoJSON(obj._geolocation);
+            obj._geolocation = processGeolocation(obj);
             filteredData.push(obj);
         }
     }
@@ -485,6 +487,48 @@ ONA.uploadFormToOna = function (formJSON, projectId, file, cb) {
  */
 function replaceYXWithGeoJSON(input){
     return (!input[1] && !input[0]) ? null : {"type":"Point","coordinates":[input[1],input[0]]};
+}
+
+/**
+ * Takes the value of the _geolocation or geo_location properties
+ * and returns a GeoJSON encoded point, line or polygon.
+ *
+ * @param  item        the survey data
+ * @return GeoJSON     of type point, line or polygon
+ */
+function processGeolocation(item){
+    // pull out both geom properties
+    var _geolocation = item._geolocation;
+    var geo_location = item.geo_location;
+
+    // check for point data
+    if (_geolocation[1] && _geolocation[0]){
+        return  {"type":"Point","coordinates":[_geolocation[1],_geolocation[0]]};
+    }
+    else {
+        points = geo_location.split(';');
+        coords = [];
+        points.forEach(function(point, idx){
+            // ignore extraneous 0.0 and empty coordinate values
+            coord = point.split(' ').slice(0, 2);
+            if (coord[0] != ''){
+                coords.push(coord);
+            }
+        })
+        // check for polygon type
+        var start = coords[0];
+        var end = coords[coords.length -1];
+        var polygon = (start[0] === end[0] && start[1] === end[1]);
+        if (polygon) {
+            // return GeoJSON Polygon
+            return {"type": "Polygon", "coordinates": [coords]};
+        }
+        else{
+            // return GeoJSON LineString
+            return {"type": "LineString", "coordinates": coords};
+        }
+    }
+    return null;
 }
 
 function httpOrHttps(port) {
