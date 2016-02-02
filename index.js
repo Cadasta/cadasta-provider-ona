@@ -512,7 +512,7 @@ function processGeolocation(item){
             // ignore extraneous 0.0 and empty coordinate values
             coord = point.split(' ').slice(0, 2);
             if (coord[0] != ''){
-                coords.push(coord);
+                coords.push([coord[1], coord[0]]);
             }
         })
         // check for polygon type
