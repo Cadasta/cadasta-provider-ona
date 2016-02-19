@@ -124,6 +124,10 @@ ONA.parse = function(input, cadasta_data, cb) {
                 //item._geolocation = replaceYXWithGeoJSON(item._geolocation);
                 item._geolocation = processGeolocation(item);
             }
+            if(item._attachments){
+                // process attachments
+                item._attachments = processAttachments(item);
+            }
         });
 
         var cjf = {
@@ -529,6 +533,40 @@ function processGeolocation(item){
         }
     }
     return null;
+}
+
+/**
+ * Updates the _attachment objects with corresponding
+ * field data.
+ *
+ * @param  item     the survey data
+ * @return the annotated survey data
+ */
+function processAttachments(item){
+    // dict to hold media fields
+    var media = {};
+    // populate the media dict
+    for(var key in item){
+        if(key.startsWith('photograph_') || key.startsWith('audio_') || key.startsWith('video_')){
+            media[key] = item[key];
+        }
+    }
+    // annotate the _attachments with the media fields
+    _attachments = item._attachments;
+    _attachments.forEach(function(attachment, idx){
+        // get the attachment filename
+        var filename = attachment.filename.split("/")[2];
+        // iterate through the media fields
+        // and annotate the corresponding attachment
+        for(var key in media){
+            if (media[key] === filename){
+                attachment.resource_type = key.split("_")[1];
+                attachment.resource_file_name = filename;
+                attachment.field_name = key;
+            }
+        }
+    });
+    return _attachments;
 }
 
 function httpOrHttps(port) {
