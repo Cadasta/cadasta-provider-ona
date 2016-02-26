@@ -565,6 +565,10 @@ function processAttachments(item){
                 attachment.field_name = key;
             }
         }
+        // add in ONA host
+        if (settings){
+            attachment.survey_host = settings.ona.host;
+        }
     });
     return _attachments;
 }
