@@ -103,7 +103,26 @@ describe('ONA Suite', function () {
       })
   })
 
-
+  /**
+   * Test media ingestion
+   */
+  it('should load an ONA file with attached resources', function(done){
+      var url = path.join(__dirname + '/data/mediasurvey-data.json');
+      ona_provider.load(url, function(err, response){
+          //console.log(JSON.stringify(response.data[0], null, '\t'));
+          (response).should.have.property('cadasta_id');
+          (response).should.have.property('operation');
+          (response).should.have.property('version');
+          (response).should.have.property('data');
+          //console.log(response.data[0]);
+          assert.typeOf(response.data, 'array', 'data should be an array of objects.');
+          assert.typeOf(response.data[0]._attachments, 'array', 'attachments should be an array of objects.');
+          assert.equal(response.data[0]._attachments[0].filename, 'bjohare/attachments/1455727386250.jpg', 'Wrong filename');
+          assert.equal(response.data[0]._attachments[0].resource_type, 'party', 'resource type should be party');
+          assert.equal(response.data[0]._attachments[0].resource_file_name, '1455727386250.jpg', 'wrong resource file name');
+          done();
+      })
+  })
 })
 
 

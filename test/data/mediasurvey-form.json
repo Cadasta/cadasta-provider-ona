@@ -1,0 +1,180 @@
+{
+    "default_language": "default",
+    "id_string": "OPDPboundaryMedia",
+    "children": [{
+        "name": "start",
+        "type": "start"
+    }, {
+        "name": "end",
+        "type": "end"
+    }, {
+        "name": "today",
+        "type": "today"
+    }, {
+        "name": "deviceid",
+        "type": "deviceid"
+    }, {
+        "name": "title",
+        "label": "OPDP Community Boundary Point",
+        "type": "note"
+    }, {
+        "children": [{
+            "name": "kate",
+            "label": "Kate Chapman"
+        }, {
+            "name": "frank",
+            "label": "Frank Pichel"
+        }],
+        "name": "surveyor",
+        "label": "Surveyor Name",
+        "type": "select one"
+    }, {
+        "children": [{
+            "name": "group",
+            "label": "Community"
+        }],
+        "name": "party_type",
+        "label": "Group Type",
+        "type": "select one"
+    }, {
+        "children": [{
+            "name": "community1",
+            "label": "Community 1"
+        }, {
+            "name": "community2",
+            "label": "Community 2"
+        }, {
+            "name": "community3",
+            "label": "Community 3"
+        }],
+        "name": "applicant_name_group",
+        "bind": {
+            "relevant": "${party_type}='group'"
+        },
+        "label": "Community Name",
+        "type": "select one"
+    }, {
+        "name": "applicant_name_full",
+        "bind": {
+            "relevant": "${party_type}='individual'"
+        },
+        "label": "Individual Name",
+        "type": "text"
+    }, {
+        "name": "geo_location",
+        "hint": "Wait for strong signal. Record point as close to physical location as possible.",
+        "label": "Coordinates of Boundary Point",
+        "type": "geopoint"
+    }, {
+        "children": [{
+            "name": "neighbor1",
+            "label": "Neighbor 1"
+        }, {
+            "name": "neighbor2",
+            "label": "Neighbor 2"
+        }, {
+            "name": "neighbor3",
+            "label": "Neighbor 3"
+        }, {
+            "name": "other",
+            "label": "Other"
+        }],
+        "name": "neighbors",
+        "hint": "(Select all that share the border this point)",
+        "label": "Neighboring communities at this point:",
+        "type": "select all that apply"
+    }, {
+        "name": "neighbors_other",
+        "bind": {
+            "relevant": "selected(../neighbors, 'other')"
+        },
+        "label": "Specify other.",
+        "type": "text"
+    }, {
+        "children": [{
+            "name": "yes",
+            "label": "Yes"
+        }, {
+            "name": "no",
+            "label": "No"
+        }],
+        "name": "boundary_agreed",
+        "hint": "(Only if formally agreed)",
+        "label": "Boundary point agreed with all neighbors?",
+        "type": "select one"
+    }, {
+        "name": "date_land_possession",
+        "hint": "(Date of formal agreement, e.g. MOU)",
+        "label": "Date of bounday agreement",
+        "type": "dateTime"
+    }, {
+        "name": "photograph_party",
+        "label": "Photo of party?",
+        "type": "photo"
+    }, {
+        "name": "photograph_parcel",
+        "label": "Photo of boundary location?",
+        "type": "photo"
+    }, {
+        "name": "sound_record",
+        "label": "Audio recording about boundary location?",
+        "type": "audio"
+    }, {
+        "name": "video_record",
+        "label": "Video recording about boundary location?",
+        "type": "video"
+    }, {
+        "name": "notes",
+        "label": "Notes about this boundary point:",
+        "type": "text"
+    }, {
+        "children": [{
+            "name": "name",
+            "label": "Name of witness",
+            "type": "text"
+        }],
+        "name": "witness",
+        "hint": "(Member of group present at time of survey)",
+        "label": "Witness",
+        "type": "repeat"
+    }, {
+        "name": "means_of_acquire",
+        "label": "How did you acquire the land?",
+        "type": "text"
+    }, {
+        "children": [{
+            "name": "customary_rights",
+            "label": "Customary Rights"
+        }],
+        "name": "tenure_type",
+        "label": "What is the social tenure type?",
+        "type": "select one"
+    }, {
+        "children": [{
+            "name": "community",
+            "label": "community"
+        }],
+        "name": "land_type",
+        "label": "What is the boundary type?",
+        "type": "select one"
+    }, {
+        "control": {
+            "bodyless": true
+        },
+        "children": [{
+            "name": "instanceID",
+            "bind": {
+                "readonly": "true()",
+                "calculate": "concat('uuid:', uuid())"
+            },
+            "type": "calculate"
+        }],
+        "name": "meta",
+        "type": "group"
+    }],
+    "version": "201602171642",
+    "type": "survey",
+    "name": "GeoODKSurvey-Media",
+    "sms_keyword": "OPDPboundaryMedia",
+    "title": "OPDPboundaryMedia"
+}
